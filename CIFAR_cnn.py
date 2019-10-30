@@ -41,22 +41,29 @@ images, label = dataiter.next()
 imshow(torchvision.utils.make_grid(images))
 print(''.join('%5s' % classes[label[j]] for j in range (BATCH_SIZE)))
 
-class Net(nn.Module):
+class Net_1(nn.Module):
     def __init__ (self):
-        super(Net, self).__init__ ()
-        self.conv1 = nn.Conv2d(in_channels= 3, out_channels= 6, kernel_size= 5)
+        super(Net_1, self).__init__ ()
+        self.conv1 = nn.Conv2d(in_channels= 3, out_channels= 64, kernel_size= 3, padding = 1)
+        self.conv2 = nn.Conv2d(in_channels=64, out_channels= 128, kernel_size= 3, padding = 1)
+        self.conv3 = nn.Conv2d(in_channels=128, out_channels= 256, kernel_size= 3, padding = 1)
+        self.conv4 = nn.Conv2d(in_channels=256, out_channels= 512, kernel_size= 3, padding = 1)
+
         self.pool1 = nn.MaxPool2d(kernel_size= 2, stride= 2)
-        self.conv2 = nn.Conv2d(in_channels=6, out_channels= 16, kernel_size= 5)
-        self.fc1 = nn.Linear(in_features=5*5*16,out_features= 120)
-        self.fc2 = nn.Linear(in_features= 120, out_features= 84)
-        self.fc3 = nn.Linear(in_features= 84, out_features= 10)
+        self.fc1 = nn.Linear(in_features=512*2*2,out_features= 256)
+        self.fc2 = nn.Linear(in_features= 256, out_features= 128)
+        self.fc3 = nn.Linear(in_features= 128, out_features= 10)
         
     def forward(self,x):
-        x = F.relu(self.conv1(x))
-        x = self.pool1(x)
-        x = F.relu(self.conv2(x))
-        x = self.pool1(x)
-        x = x.view(-1, 16*5*5)        
+        x = F.relu(self.conv1(x)) # 32
+        x = self.pool1(x) # 16
+        x = F.relu(self.conv2(x)) # 16
+        x = self.pool1(x) # 8
+        x = F.relu(self.conv3(x)) # 8
+        x = self.pool1(x) # 4
+        x = F.relu(self.conv4(x)) # 4
+        x = self.pool1(x) # 2
+        x = x.view(-1, 512*2*2)        
         x = self.fc1(x)
         x = F.relu(x)
         x = self.fc2(x)
@@ -64,12 +71,12 @@ class Net(nn.Module):
         x = self.fc3(x)
         return x
 
-net = Net()
+net = Net_1()
 
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(params= net.parameters(), lr=0.001, momentum= 0.9 ) 
 
-for epoch in range(2):  # loop over the dataset multiple times
+for epoch in range(10):  # loop over the dataset multiple times
 
     running_loss = 0.0
     for i, data in enumerate(train_dataloader, 0):
